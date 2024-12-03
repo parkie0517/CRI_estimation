@@ -34,3 +34,9 @@ The folder should have the following structure:
 Semantic Segmentation: `model_ss`  
 Depth Estimation: `depth_encoder`, `depth_decoder`  
 Object Detection: `model_od`  
+
+## Result
+the result should be saved as a npy file.
+the npy file should contain a dictionary.
+the keys are the name of the file.
+and the value is the predicted label.
