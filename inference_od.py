@@ -281,7 +281,25 @@ class Ensemble(nn.ModuleList):
         # y = torch.stack(y).mean(0)  # mean ensemble
         y = torch.cat(y, 1)  # nms ensemble
         return y, None  # inference, train output    
-    
+
+
+def plot_boxes(im, xyxy, label, color=(255, 0, 0), thickness=2):
+    """
+    Draw bounding boxes and label on the image.
+
+    Args:
+        im: The image to draw on.
+        xyxy: Bounding box coordinates (xmin, ymin, xmax, ymax).
+        label: The text label for the box.
+        color: Bounding box color.
+        thickness: Line thickness.
+    """
+    c1, c2 = (int(xyxy[0]), int(xyxy[1])), (int(xyxy[2]), int(xyxy[3]))
+    cv2.rectangle(im, c1, c2, color, thickness)
+    t_size = cv2.getTextSize(label, cv2.FONT_HERSHEY_SIMPLEX, 0.5, 1)[0]
+    c3 = c1[0] + t_size[0], c1[1] - t_size[1] - 3
+    cv2.rectangle(im, c1, c3, color, -1)  # Label background
+    cv2.putText(im, label, (c1[0], c1[1] - 2), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (255, 255, 255), thickness=1)
 
 weights = 'ckpts/yolov7_cityscapes.pt'
 
@@ -318,7 +336,7 @@ colors = [[random.randint(0, 255) for _ in range(3)] for _ in names]
 model_od = model
 
 root_dir = "." 
-source = os.path.join(root_dir,'student_dataset/train/current_image/cri_0')
+source = os.path.join(root_dir,'student_dataset/student_test/current_image')
 dataset = LoadImages(source, img_size=imgsz, stride=stride)
 root_dir = "." 
 result_dir = os.path.join(root_dir,"results")
@@ -332,12 +350,12 @@ for path, img, im0s, vid_cap in dataset:
     if img.ndimension() == 3:
         img = img.unsqueeze(0)
     
-    import pdb; pdb.set_trace()
+    
     # Inference
     with torch.no_grad():   # Calculating gradients would cause a GPU memory leak
         pred = model(img)[0]
         # Apply NMS
-        pred = non_max_suppression(pred)
+        pred = non_max_suppression(pred) # pred.shape = (# of predictoin, 6)
         # Process detections
         for i, det in enumerate(pred): 
             
@@ -350,6 +368,7 @@ for path, img, im0s, vid_cap in dataset:
             save_path = str(object_detection_pred_dir +'/'+ str(p.name)) 
 
             gn = torch.tensor(im0.shape)[[1, 0, 1, 0]] 
+            
             if len(det):
                 # Rescale boxes from img_size to original_image size
                 det[:, :4] = scale_coords(
@@ -358,10 +377,14 @@ for path, img, im0s, vid_cap in dataset:
                 # Write results
                 for *xyxy, conf, cls in reversed(det):
                     pass
-                ########################################
-                ###########Your Implementation##########
-                ########################################
-
-                # save the object detection pred result to "od_pred_dir"
-                # use xyxy and cls to identify where and which object is detected
+                    # use xyxy and cls to identify where and which object is detected
+                    # extract label
+                    # draw bounding box
+                    label_num = int(cls.item())
+                    label = names[label_num]
+                    color = colors[label_num]
+                    plot_boxes(im0, xyxy, label, color) # def plot_boxes(im, xyxy, label, color=(255, 0, 0), thickness=2):
+                    
+            # save the object detection pred result to "od_pred_dir"
+            cv2.imwrite(save_path, im0)
             
