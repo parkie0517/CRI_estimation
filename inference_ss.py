@@ -643,13 +643,11 @@ os.makedirs(seg_dir,exist_ok=True)
 
 seg_color_dir = os.path.join(seg_dir,"color")
 os.makedirs(seg_color_dir,exist_ok=True)
-"""
 seg_pred_dir = os.path.join(seg_dir,"pred")
 os.makedirs(seg_pred_dir,exist_ok=True)
-"""
 
-#images = glob.glob(os.path.join(root_dir,'student_dataset/student_test/current_image/*.png')) # test
-images = glob.glob(os.path.join(root_dir,'student_dataset/train/current_image/cri_0/*.png')) # 0
+images = glob.glob(os.path.join(root_dir,'student_dataset/student_test/current_image/*.png')) # test
+#images = glob.glob(os.path.join(root_dir,'student_dataset/train/current_image/cri_0/*.png')) # 0
 #images = glob.glob(os.path.join(root_dir,'student_dataset/train/current_image/cri_0/*.png')) # 1
 #images = glob.glob(os.path.join(root_dir,'student_dataset/train/current_image/cri_0/*.png')) # 2
 #images = glob.glob(os.path.join(root_dir,'student_dataset/train/current_image/cri_0/*.png')) # 3
@@ -671,11 +669,11 @@ for image in tqdm(images):
         pred = model_ss(imageT)  # Model output shape: (batch_size, num_classes, H, W)
         pred = torch.argmax(pred, dim=1).squeeze(0).cpu().numpy()  # Take the class with the highest probability
     
-    """
+    
     # Save the raw segmentation prediction
     pred_path = os.path.join(seg_pred_dir, name)
     cv2.imwrite(pred_path, pred)
-    """
+    
     
     # Generate a colormap using decode_segmap
     colormap = decode_segmap(pred.astype(np.uint8))  # Convert to uint8 for compatibility
