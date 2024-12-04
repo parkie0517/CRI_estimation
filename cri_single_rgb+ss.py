@@ -126,7 +126,7 @@ model = CRIModel().to(device)
 criterion = nn.CrossEntropyLoss()
 optimizer = optim.Adam(model.parameters(), lr=LEARNING_RATE)
 scheduler = torch.optim.lr_scheduler.StepLR(optimizer, step_size=7, gamma=0.1)
-"""
+
 # Training Loop
 for epoch in range(EPOCHS):
     model.train()
@@ -152,6 +152,7 @@ for epoch in range(EPOCHS):
     model.eval()
     correct = 0
     total = 0
+    val_loss = 0.0
     with torch.no_grad():
         for batch in val_loader:
             data, labels = batch
@@ -160,11 +161,17 @@ for epoch in range(EPOCHS):
             labels = labels.to(device)
             
             outputs = model(rgb, seg)
+            loss = criterion(outputs, labels)  # Calculate loss for the current batch
+            val_loss += loss.item()  # Accumulate validation loss
+        
             _, predicted = torch.max(outputs, 1)
             total += labels.size(0)
             correct += (predicted == labels).sum().item()
-    print(f"Validation Accuracy: {100 * correct / total:.2f}%")
-"""
+    
+    val_loss /= len(val_loader)  
+    val_accuracy = 100 * correct / total      
+    print(f"Validation Loss: {val_loss:.4f}, Validation Accuracy: {val_accuracy:.2f}%")
+
 
 # Paths
 TEST_RGB_DIR = "./student_dataset/student_test/current_image"
