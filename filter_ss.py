@@ -87,4 +87,4 @@ for image_path in tqdm(image_list, desc="Processing images", unit="image"):
     output_path = os.path.join(dst_path, os.path.basename(image_path))
     cv2.imwrite(output_path, filtered_image_bgr)
     
-    breakpoint()
+print("Filtering Complete")
