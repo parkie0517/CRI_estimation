@@ -27,7 +27,7 @@ class CRIDataset(Dataset):
         seg_path = os.path.join(self.seg_dir, self.files[idx])
         
         rgb_image = Image.open(rgb_path).convert("RGB")
-        seg_image = Image.open(seg_path).convert("L")
+        seg_image = Image.open(seg_path).convert("RGB")
         
         if self.transform:
             rgb_image = self.transform(rgb_image)
@@ -45,7 +45,7 @@ class CRIDataset(Dataset):
 # Paths
 TRAIN_RGB_DIR = "./student_dataset/train/current_image"
 TRAIN_SEG_DIR = "./results_train/segmentation/filtered"
-CLASS_WEIGHTS = [300, 100, 100, 80, 100]
+#CLASS_WEIGHTS = [300, 100, 100, 80, 100]
 
 # Hyperparameters
 BATCH_SIZE = 128
@@ -70,16 +70,38 @@ for label in range(5):
     labels.extend([label] * len(files))
 
 # Combine datasets
-train_dataset = torch.utils.data.ConcatDataset(datasets)
+combined_datasets = torch.utils.data.ConcatDataset(datasets)
 
+"""
 # Weighted Random Sampler
 weights = [1.0 / CLASS_WEIGHTS[label] for label in labels]
 sampler = WeightedRandomSampler(weights, len(weights), replacement=True)
+"""
 
 # Split dataset
-val_size = int(VAL_SPLIT * len(train_dataset))
-train_size = len(train_dataset) - val_size
-train_dataset, val_dataset = random_split(train_dataset, [train_size, val_size])
+val_size = int(VAL_SPLIT * len(combined_datasets))
+train_size = len(combined_datasets) - val_size
+train_dataset, val_dataset = random_split(combined_datasets, [train_size, val_size]) # [476, 204]
+
+
+############
+train_labels = []
+for idx in range(len(train_dataset)):
+    _, label = train_dataset[idx]
+    train_labels.append(label)
+    
+
+from collections import Counter
+label_counts = Counter(train_labels)
+total_samples = len(train_labels)
+class_weights = {label: total_samples / count for label, count in label_counts.items()}
+# Assign weights to each sample based on its label
+sample_weights = [class_weights[label] for label in train_labels]
+
+
+sampler = WeightedRandomSampler(weights=sample_weights, num_samples=len(sample_weights), replacement=True)
+############
+
 
 train_loader = DataLoader(train_dataset, batch_size=BATCH_SIZE, sampler=sampler)
 val_loader = DataLoader(val_dataset, batch_size=BATCH_SIZE, shuffle=False)
@@ -98,26 +120,34 @@ class CRIModel(nn.Module):
         combined = torch.cat((rgb_features, seg_features), dim=1)
         return self.fc(combined)
 
-model = CRIModel()
+device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+model = CRIModel().to(device)
+
 criterion = nn.CrossEntropyLoss()
 optimizer = optim.Adam(model.parameters(), lr=LEARNING_RATE)
+scheduler = torch.optim.lr_scheduler.StepLR(optimizer, step_size=7, gamma=0.1)
 
 # Training Loop
 for epoch in range(EPOCHS):
     model.train()
     running_loss = 0.0
+    
     for batch in train_loader:
         data, labels = batch
-        rgb, seg = data["rgb"], data["seg"]
+        rgb = data["rgb"].to(device)
+        seg = data["seg"].to(device)
+        labels = labels.to(device)
+        
         optimizer.zero_grad()
         outputs = model(rgb, seg)
         loss = criterion(outputs, labels)
         loss.backward()
         optimizer.step()
         running_loss += loss.item()
-
+        
+    scheduler.step()
     print(f"Epoch {epoch+1}, Loss: {running_loss/len(train_loader)}")
-
+    
     # Validation
     model.eval()
     correct = 0
@@ -125,7 +155,10 @@ for epoch in range(EPOCHS):
     with torch.no_grad():
         for batch in val_loader:
             data, labels = batch
-            rgb, seg = data["rgb"], data["seg"]
+            rgb = data["rgb"].to(device)
+            seg = data["seg"].to(device)
+            labels = labels.to(device)
+            
             outputs = model(rgb, seg)
             _, predicted = torch.max(outputs, 1)
             total += labels.size(0)
@@ -145,19 +178,20 @@ transform = transforms.Compose([
 ])
 
 # Load Model
-model = CRIModel()
-model.load_state_dict(torch.load("cri_model.pth"))
 model.eval()
 
 # Prediction
 predictions = {}
 for file in os.listdir(TEST_RGB_DIR):
     rgb_image = transform(Image.open(os.path.join(TEST_RGB_DIR, file)).convert("RGB"))
-    seg_image = transform(Image.open(os.path.join(TEST_SEG_DIR, file)).convert("L"))
+    seg_image = transform(Image.open(os.path.join(TEST_SEG_DIR, file)).convert("RGB"))
     rgb_image, seg_image = rgb_image.unsqueeze(0), seg_image.unsqueeze(0)
+    rgb_image = rgb_image.to(device)
+    seg_image = seg_image.to(device)
     output = model(rgb_image, seg_image)
     _, predicted = torch.max(output, 1)
     predictions[file] = predicted.item()
 
 # Save Predictions
-np.save(OUTPUT_FILE, predictions)
+sorted_predictions = dict(sorted(predictions.items()))
+np.save(OUTPUT_FILE, sorted_predictions)
