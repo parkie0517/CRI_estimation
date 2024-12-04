@@ -126,7 +126,7 @@ model = CRIModel().to(device)
 criterion = nn.CrossEntropyLoss()
 optimizer = optim.Adam(model.parameters(), lr=LEARNING_RATE)
 scheduler = torch.optim.lr_scheduler.StepLR(optimizer, step_size=7, gamma=0.1)
-
+"""
 # Training Loop
 for epoch in range(EPOCHS):
     model.train()
@@ -164,12 +164,12 @@ for epoch in range(EPOCHS):
             total += labels.size(0)
             correct += (predicted == labels).sum().item()
     print(f"Validation Accuracy: {100 * correct / total:.2f}%")
-
+"""
 
 # Paths
 TEST_RGB_DIR = "./student_dataset/student_test/current_image"
 TEST_SEG_DIR = "./results/segmentation/filtered"
-OUTPUT_FILE = "cri_predictions.npy"
+OUTPUT_FILE = "cri_single_rgb+ss.npy"
 
 # Transform
 transform = transforms.Compose([
