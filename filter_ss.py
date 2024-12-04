@@ -5,6 +5,8 @@ This file is used to filter semantic segmentation results.
 import os
 import cv2
 import numpy as np
+from tqdm import tqdm  # Import tqdm for the progress bar
+
 
 colors = { 
     'null': [  0,   0,   0], # null
@@ -52,7 +54,8 @@ os.makedirs(dst_path, exist_ok=True)
 image_list = [os.path.join(src_path, fname) for fname in os.listdir(src_path) if fname.endswith(('.png'))]
 
 
-for image_path in image_list:
+# Loop through the images with a progress bar
+for image_path in tqdm(image_list, desc="Processing images", unit="image"):
     # Load the image
     image = cv2.imread(image_path)
     if image is None:
@@ -75,4 +78,3 @@ for image_path in image_list:
     # Save the filtered image to the destination path
     output_path = os.path.join(dst_path, os.path.basename(image_path))
     cv2.imwrite(output_path, filtered_image)
-    print(f"Processed and saved: {output_path}")
