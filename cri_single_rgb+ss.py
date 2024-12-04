@@ -44,10 +44,10 @@ class CRIDataset(Dataset):
         image_path = self.data[idx]
         label = self.labels[idx]
         rgb_image = Image.open(image_path).convert("RGB")
-        
+        import pdb; pdb.set_trace()
         # Load the corresponding filtered semantic segmentation (SS) image
         file_name = os.path.basename(image_path)
-        ss_image_path = os.path.join(FILTERED_SS_PATH, file_name)
+        ss_image_path = os.path.join(TRAIN_FILTERED_SS_PATH, file_name)
         ss_image = Image.open(ss_image_path).convert("RGB")  # Ensure SS is loaded in RGB format
         
         
@@ -59,7 +59,7 @@ class CRIDataset(Dataset):
         
         # Concatenate along the channel axis to create (1024, 2048, 6)
         combined_img = np.concatenate((rgb_image, ss_image), axis=-1)
-        breakpoint()
+        #
         return combined_img, label
 
 
@@ -67,7 +67,8 @@ class CRIDataset(Dataset):
 # Paths
 TRAIN_PATH = "./student_dataset/train/current_image"
 TEST_PATH = "./student_dataset/student_test/current_image"
-FILTERED_SS_PATH = '/home/vilab/ssd1tb/hj_ME455/Term_Project/results/segmentation/filtered'
+TRAIN_FILTERED_SS_PATH = '/home/vilab/ssd1tb/hj_ME455/Term_Project/results_train/segmentation/filtered'
+TEST_FILTERED_SS_PATH = '/home/vilab/ssd1tb/hj_ME455/Term_Project/results/segmentation/filtered'
 
 # Config
 NUM_CLASSES = 5
@@ -98,7 +99,7 @@ sampler = WeightedRandomSampler(weights=sample_weights, num_samples=len(sample_w
 
 # Datasets and Loaders
 train_dataset = CRIDataset(TRAIN_PATH, transform=train_transform)
-train_loader = DataLoader(train_dataset, batch_size=BATCH_SIZE, sampler=sampler, num_workers=4)
+train_loader = DataLoader(train_dataset, batch_size=BATCH_SIZE, sampler=sampler, num_workers=1)
 
 # Model
 model = models.resnet18(pretrained=True)
@@ -115,6 +116,7 @@ def train_model():
     model.train()
     for epoch in range(EPOCHS):
         running_loss = 0.0
+        #
         for images, labels in train_loader:
             images, labels = images.to(device), labels.to(device)
 

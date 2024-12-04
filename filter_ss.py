@@ -42,8 +42,8 @@ allowed_colors = [
 ]
 
 # load images from the directory
-src_path = '/home/vilab/ssd1tb/hj_ME455/Term_Project/results/segmentation/color'
-dst_path = '/home/vilab/ssd1tb/hj_ME455/Term_Project/results/segmentation/filtered'
+src_path = '/home/vilab/ssd1tb/hj_ME455/Term_Project/results_train/segmentation/color/cri_4'
+dst_path = '/home/vilab/ssd1tb/hj_ME455/Term_Project/results_train/segmentation/filtered/cri_4'
 
 
 # Create destination path if it doesn't exist
