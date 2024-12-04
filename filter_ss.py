@@ -70,11 +70,15 @@ for image_path in tqdm(image_list, desc="Processing images", unit="image"):
 
     # Filter pixels based on allowed categories
     filtered_image = np.zeros_like(image)  # Initialize a blank image
+    
     for color in allowed_colors:
+        breakpoint()
         # Create a mask for the current color
         mask = np.all(image == color, axis=-1)
+        print(f"Mask for color {color}:\n{mask.astype(int)}")
         filtered_image[mask] = color
 
     # Save the filtered image to the destination path
     output_path = os.path.join(dst_path, os.path.basename(image_path))
     cv2.imwrite(output_path, filtered_image)
+    
