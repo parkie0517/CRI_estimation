@@ -73,13 +73,6 @@ test_transform = transforms.Compose([
     transforms.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225]),
 ])
 
-
-# Weighted Sampler
-class_weights = compute_class_weight('balanced', classes=np.arange(NUM_CLASSES), y=np.repeat(np.arange(NUM_CLASSES), CLASS_COUNTS))
-sample_weights = [class_weights[label] for label in np.repeat(np.arange(NUM_CLASSES), CLASS_COUNTS)]
-sampler = WeightedRandomSampler(weights=sample_weights, num_samples=len(sample_weights), replacement=True)
-
-
 # Dataset splitting with 30% validation data for each label
 dataset = CRIDataset(TRAIN_PATH, transform=train_transform)
 label_indices = {label: [] for label in range(NUM_CLASSES)}
@@ -98,8 +91,15 @@ for label in range(NUM_CLASSES):
 train_subset = torch.utils.data.Subset(dataset, train_indices)
 val_subset = torch.utils.data.Subset(dataset, val_indices)
 
-train_loader = DataLoader(train_subset, batch_size=BATCH_SIZE, shuffle=True, sampler=sampler, num_workers=4)
-val_loader = DataLoader(val_subset, batch_size=BATCH_SIZE, shuffle=False, sampler=sampler, num_workers=4)
+# Compute weighted sampler for train subset
+train_labels = [dataset.labels[i] for i in train_indices]
+class_weights = compute_class_weight('balanced', classes=np.arange(NUM_CLASSES), y=train_labels)
+sample_weights = [class_weights[label] for label in train_labels]
+sampler = WeightedRandomSampler(weights=sample_weights, num_samples=len(sample_weights), replacement=True)
+
+# DataLoaders
+train_loader = DataLoader(train_subset, batch_size=BATCH_SIZE, sampler=sampler, num_workers=4)
+val_loader = DataLoader(val_subset, batch_size=BATCH_SIZE, shuffle=False, num_workers=4)
 
 # Model
 model = models.resnet18(pretrained=True)
@@ -135,7 +135,7 @@ def train_model():
         train_accuracy = correct / total
         val_loss, val_accuracy = validate_model()
 
-        print(f"Epoch {epoch + 1}/{EPOCHS}, Train Loss: {running_loss / len(train_loader):.4f}, "
+        print(f"Epoch {epoch + 1}/{EPOCHS}, Loss: {running_loss / len(train_loader):.4f}, "
               f"Train Accuracy: {train_accuracy:.4f}, Val Loss: {val_loss:.4f}, Val Accuracy: {val_accuracy:.4f}")
 
         scheduler.step()
