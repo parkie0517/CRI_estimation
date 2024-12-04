@@ -134,7 +134,7 @@ def predict():
 
     # Save predictions as an npy file
     np.save("cri_single_rgb.npy", np.array(predictions))
-    print("Predictions saved to cri_single.npy")
+    print("Predictions saved to cri_single_rgb.npy")
 
 
 if __name__ == "__main__":

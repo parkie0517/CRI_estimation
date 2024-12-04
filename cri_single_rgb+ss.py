@@ -40,20 +40,34 @@ class CRIDataset(Dataset):
         return len(self.data)
 
     def __getitem__(self, idx):
+        # Load the RGB image
         image_path = self.data[idx]
         label = self.labels[idx]
-        image = Image.open(image_path).convert("RGB")
+        rgb_image = Image.open(image_path).convert("RGB")
+        
+        # Load the corresponding filtered semantic segmentation (SS) image
+        file_name = os.path.basename(image_path)
+        ss_image_path = os.path.join(FILTERED_SS_PATH, file_name)
+        ss_image = Image.open(ss_image_path).convert("RGB")  # Ensure SS is loaded in RGB format
+        
+        
+        
 
         if self.transform:
-            image = self.transform(image)
-
-        return image, label
+            rgb_image = self.transform(rgb_image)
+            ss_image = self.transform(ss_image)
+        
+        # Concatenate along the channel axis to create (1024, 2048, 6)
+        combined_img = np.concatenate((rgb_image, ss_image), axis=-1)
+        breakpoint()
+        return combined_img, label
 
 
 
 # Paths
 TRAIN_PATH = "./student_dataset/train/current_image"
 TEST_PATH = "./student_dataset/student_test/current_image"
+FILTERED_SS_PATH = '/home/vilab/ssd1tb/hj_ME455/Term_Project/results/segmentation/filtered'
 
 # Config
 NUM_CLASSES = 5
@@ -133,8 +147,8 @@ def predict():
             predictions[file_name_with_extension] = preds.item()
 
     # Save predictions as an npy file
-    np.save("cri_single.npy", np.array(predictions))
-    print("Predictions saved to cri_single.npy")
+    np.save("cri_single_rgb+ss.npy", np.array(predictions))
+    print("Predictions saved to cri_single_rgb.npy")
 
 
 if __name__ == "__main__":
