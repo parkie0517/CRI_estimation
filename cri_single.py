@@ -83,27 +83,8 @@ sample_weights = [class_weights[label] for label in np.repeat(np.arange(NUM_CLAS
 sampler = WeightedRandomSampler(weights=sample_weights, num_samples=len(sample_weights), replacement=True)
 
 # Datasets and Loaders
-dataset = CRIDataset(TRAIN_PATH, transform=train_transform)
-label_indices = {label: [] for label in range(NUM_CLASSES)}
-
-for idx, label in enumerate(dataset.labels):
-    label_indices[label].append(idx)
-
-train_indices, val_indices = [], []
-
-for label in range(NUM_CLASSES):
-    indices = label_indices[label]
-    split = int(len(indices) * 0.3)
-    val_indices.extend(indices[:split])
-    train_indices.extend(indices[split:])
-
-
-train_subset = torch.utils.data.Subset(dataset, train_indices)
-val_subset = torch.utils.data.Subset(dataset, val_indices)
-
-
-train_loader = DataLoader(train_subset, batch_size=BATCH_SIZE, shuffle=True, num_workers=4)
-val_loader = DataLoader(val_subset, batch_size=BATCH_SIZE, shuffle=False, num_workers=4)
+train_dataset = CRIDataset(TRAIN_PATH, transform=train_transform)
+train_loader = DataLoader(train_dataset, batch_size=BATCH_SIZE, sampler=sampler, num_workers=4)
 
 # Model
 model = models.resnet18(pretrained=True)
@@ -112,7 +93,7 @@ model = model.to(device)
 
 # Optimizer and Loss
 optimizer = torch.optim.Adam(model.parameters(), lr=0.001)
-scheduler = torch.optim.lr_scheduler.CosineAnnealingLR(optimizer, T_max=EPOCHS)
+scheduler = torch.optim.lr_scheduler.StepLR(optimizer, step_size=7, gamma=0.1)
 criterion = FocalLoss(alpha=1, gamma=2)
 
 # Training
@@ -120,8 +101,6 @@ def train_model():
     model.train()
     for epoch in range(EPOCHS):
         running_loss = 0.0
-        correct, total = 0, 0
-
         for images, labels in train_loader:
             images, labels = images.to(device), labels.to(device)
 
@@ -132,39 +111,9 @@ def train_model():
             optimizer.step()
 
             running_loss += loss.item()
-            _, preds = torch.max(outputs, 1)
-            correct += (preds == labels).sum().item()
-            total += labels.size(0)
-
-        train_accuracy = correct / total
-        val_loss, val_accuracy = validate_model()
-
-        print(f"Epoch {epoch + 1}/{EPOCHS}, Loss: {running_loss / len(train_loader):.4f}, "
-              f"Train Accuracy: {train_accuracy:.4f}, Val Loss: {val_loss:.4f}, Val Accuracy: {val_accuracy:.4f}")
 
         scheduler.step()
-
-
-def validate_model():
-    model.eval()
-    val_loss = 0.0
-    correct, total = 0, 0
-
-    with torch.no_grad():
-        for images, labels in val_loader:
-            images, labels = images.to(device), labels.to(device)
-
-            outputs = model(images)
-            loss = criterion(outputs, labels)
-            val_loss += loss.item()
-
-            _, preds = torch.max(outputs, 1)
-            correct += (preds == labels).sum().item()
-            total += labels.size(0)
-
-    val_accuracy = correct / total
-    return val_loss / len(val_loader), val_accuracy
-
+        print(f"Epoch {epoch + 1}/{EPOCHS}, Loss: {running_loss / len(train_loader):.4f}")
 
 # Test Predictions
 def predict():
@@ -172,7 +121,7 @@ def predict():
     test_images_dir = "./student_dataset/student_test/current_image"
     test_images = [os.path.join(test_images_dir, img) for img in os.listdir(test_images_dir) if img.endswith(".png")]
 
-    pred_dict = {}
+    predictions = {}
     with torch.no_grad():
         for image_path in test_images:
             
@@ -181,13 +130,10 @@ def predict():
             image = test_transform(image).unsqueeze(0).to(device)
             outputs = model(image)
             _, preds = torch.max(outputs, 1)
-            pred_dict[file_name_with_extension] = preds.item()
+            predictions[file_name_with_extension] = preds.item()
 
-
-    # Sort predictions based on keys
-    sorted_pred_dict = dict(sorted(pred_dict.items()))
     # Save predictions as an npy file
-    np.save("cri_single.npy", np.array(sorted_pred_dict))
+    np.save("cri_single.npy", np.array(predictions))
     print("Predictions saved to cri_single.npy")
 
 
