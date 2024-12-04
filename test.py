@@ -1,10 +1,10 @@
 import numpy as np
 
 # Load the .npy file
-file_path = 'val_sanity.npy'  # Replace with your file path
+file_path = 'cri_single.npy'  # Replace with your file path
 
-data = np.load(file_path, allow_pickle=True)
-
+data = np.load(file_path)
+#import pdb; pdb.set_trace()
 data_dict = data.item()
 print(f"The data contains {len(data_dict)} items.")
 print("Sample items from the dictionary:")
