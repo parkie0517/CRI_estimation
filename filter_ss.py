@@ -2,7 +2,9 @@
 This file is used to filter semantic segmentation results.
 
 """
-
+import os
+import cv2
+import numpy as np
 
 colors = { 
     'null': [  0,   0,   0], # null
@@ -27,20 +29,50 @@ colors = {
     'bicycle':[119, 11, 32], # bicycle
 }
 
+# Define allowed categories
+allowed_colors = [
+    colors['road'],
+    colors['sidewalk'],
+    colors['person'],
+    colors['rider'],
+    colors['motorcycle'],
+    colors['bicycle']
+]
+
 # load images from the directory
 src_path = '/home/vilab/ssd1tb/hj_ME455/Term_Project/results/segmentation/color'
 dst_path = '/home/vilab/ssd1tb/hj_ME455/Term_Project/results/segmentation/filtered'
-image_list = ???
+
+
+# Create destination path if it doesn't exist
+os.makedirs(dst_path, exist_ok=True)
+
+
+# Get list of image paths
+image_list = [os.path.join(src_path, fname) for fname in os.listdir(src_path) if fname.endswith(('.png'))]
+
+
 for image_path in image_list:
-    # open image
-    
-    # load image
-     
-    # fill a rectangle with [0, 0, 0]
-        # left top (448, 1024-50)
-        # left bottom (448, 1024)
-        # right top (2048-448, 1024-50)
-        # right bottom (2048-224, 1024)
-    
-    
-# if pixel is not within the argument then change to black
+    # Load the image
+    image = cv2.imread(image_path)
+    if image is None:
+        print(f"Failed to load image: {image_path}")
+        continue
+
+    # Get image dimensions
+    height, width, _ = image.shape
+
+    # Fill a rectangle with [0, 0, 0]
+    cv2.rectangle(image, (448, height - 50), (2048 - 448, height), (0, 0, 0), -1)
+
+    # Filter pixels based on allowed categories
+    filtered_image = np.zeros_like(image)  # Initialize a blank image
+    for color in allowed_colors:
+        # Create a mask for the current color
+        mask = np.all(image == color, axis=-1)
+        filtered_image[mask] = color
+
+    # Save the filtered image to the destination path
+    output_path = os.path.join(dst_path, os.path.basename(image_path))
+    cv2.imwrite(output_path, filtered_image)
+    print(f"Processed and saved: {output_path}")
