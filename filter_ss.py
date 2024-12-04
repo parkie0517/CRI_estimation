@@ -58,6 +58,10 @@ image_list = [os.path.join(src_path, fname) for fname in os.listdir(src_path) if
 for image_path in tqdm(image_list, desc="Processing images", unit="image"):
     # Load the image
     image = cv2.imread(image_path)
+    image = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
+
+    
+    
     if image is None:
         print(f"Failed to load image: {image_path}")
         continue
@@ -72,13 +76,15 @@ for image_path in tqdm(image_list, desc="Processing images", unit="image"):
     filtered_image = np.zeros_like(image)  # Initialize a blank image
     
     for color in allowed_colors:
-        breakpoint()
         # Create a mask for the current color
         mask = np.all(image == color, axis=-1)
-        print(f"Mask for color {color}:\n{mask.astype(int)}")
         filtered_image[mask] = color
+
+    # Convert the filtered image back to BGR for saving
+    filtered_image_bgr = cv2.cvtColor(filtered_image, cv2.COLOR_RGB2BGR)
 
     # Save the filtered image to the destination path
     output_path = os.path.join(dst_path, os.path.basename(image_path))
-    cv2.imwrite(output_path, filtered_image)
+    cv2.imwrite(output_path, filtered_image_bgr)
     
+    breakpoint()
