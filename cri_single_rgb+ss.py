@@ -49,7 +49,7 @@ TRAIN_SEG_DIR = "./results_train/segmentation/filtered"
 
 # Hyperparameters
 BATCH_SIZE = 128
-EPOCHS = 10
+EPOCHS = 5
 LEARNING_RATE = 1e-4
 VAL_SPLIT = 0.3
 
@@ -112,13 +112,28 @@ class CRIModel(nn.Module):
         super(CRIModel, self).__init__()
         self.rgb_model = models.resnet18(pretrained=True)
         self.seg_model = models.resnet18(pretrained=True)
-        self.fc = nn.Linear(2 * 1000, 5)  # 5 classes
+        
+        # Fully connected layers
+        self.fc1 = nn.Linear(2 * 1000, 512)  # First hidden layer
+        self.bn1 = nn.BatchNorm1d(512)       # Batch normalization
+        self.fc2 = nn.Linear(512, 5)         # Output layer for 5 classes
 
     def forward(self, rgb, seg):
         rgb_features = self.rgb_model(rgb)
         seg_features = self.seg_model(seg)
+        
+        # Concatenate features
         combined = torch.cat((rgb_features, seg_features), dim=1)
-        return self.fc(combined)
+        
+        # Pass through the hidden layer, BN, and activation
+        x = self.fc1(combined)
+        x = self.bn1(x)
+        x = nn.ReLU()(x)
+        
+        # Pass through the final output layer
+        x = self.fc2(x)
+        return x 
+    
 
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 model = CRIModel().to(device)

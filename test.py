@@ -1,7 +1,7 @@
 import numpy as np
 
 # Load the .npy file
-file_path = 'cri_single.npy'  # Replace with your file path
+file_path = 'cri_single_rgb+ss.npy'  # Replace with your file path
 
 data = np.load(file_path, allow_pickle=True)
 data = data.item()
