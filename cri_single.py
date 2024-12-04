@@ -121,14 +121,16 @@ def predict():
     test_images_dir = "./student_dataset/student_test/current_image"
     test_images = [os.path.join(test_images_dir, img) for img in os.listdir(test_images_dir) if img.endswith(".png")]
 
-    predictions = []
+    predictions = {}
     with torch.no_grad():
         for image_path in test_images:
+            
+            file_name_with_extension = os.path.basename(image_path)
             image = Image.open(image_path).convert("RGB")
             image = test_transform(image).unsqueeze(0).to(device)
             outputs = model(image)
             _, preds = torch.max(outputs, 1)
-            predictions.append(preds.item())
+            predictions[file_name_with_extension] = preds.item()
 
     # Save predictions as an npy file
     np.save("cri_single.npy", np.array(predictions))

@@ -3,12 +3,9 @@ import numpy as np
 # Load the .npy file
 file_path = 'cri_single.npy'  # Replace with your file path
 
-data = np.load(file_path)
-#import pdb; pdb.set_trace()
-data_dict = data.item()
-print(f"The data contains {len(data_dict)} items.")
-print("Sample items from the dictionary:")
+data = np.load(file_path, allow_pickle=True)
+data = data.item()
 
-# Print a few sample key-value pairs
-for key, value in list(data_dict.items())[:10]:  # Change 10 to view more samples
-    print(f"{key}: {value}")
+sorted_data = dict(sorted(data.items()))
+for k, v in sorted_data.items():
+    print(k, v)
