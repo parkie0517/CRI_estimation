@@ -140,7 +140,7 @@ criterion = nn.CrossEntropyLoss()
 optimizer = optim.Adam(model.parameters(), lr=1e-4)
 scheduler = torch.optim.lr_scheduler.StepLR(optimizer, step_size=10, gamma=0.1)
 
-"""
+
 for epoch in range(EPOCHS):
     model.train()
     train_loss, correct, total = 0, 0, 0
@@ -172,7 +172,7 @@ for epoch in range(EPOCHS):
     
     scheduler.step()
     print(f"Epoch {epoch + 1}/{EPOCHS}, Train Loss: {train_loss:.4f}, Train Acc: {train_acc:.4f}, Val Loss: {val_loss:.4f}, Val Acc: {val_acc:.4f}")
-"""
+
 # Save predictions
 test_dataset = CRIDataset(TEST_DIR, is_train=False, transform=transform)
 test_loader = DataLoader(test_dataset, batch_size=1, shuffle=False)
@@ -188,4 +188,9 @@ with torch.no_grad():
 
 # Save Predictions
 sorted_predictions = dict(sorted(predictions.items()))
-np.save("cri_sequential_rgb_10epoch.npy", sorted_predictions)
+
+# change key name MAINZ
+old_key = 'mainz_000002_000020_leftImg8bit.png'
+new_key = 'mainz_000002_000062_leftImg8bit.png'
+sorted_predictions[new_key] = sorted_predictions.pop(old_key)
+np.save("./cri_predictions/sequential/cri_sequential_rgb_10epoch.npy", sorted_predictions)
