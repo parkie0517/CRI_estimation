@@ -29,13 +29,23 @@ class CRIDataset(Dataset):
             self._prepare_test_samples()
 
     def _prepare_train_samples(self):
+        
         for cri in range(NUM_CLASSES):
+            
             current_dir = os.path.join(self.data_dir, f"current_image/cri_{cri}")
             past_dir = os.path.join(self.data_dir, f"past_image/cri_{cri}")
             for file in os.listdir(current_dir):
                 if file.endswith(".png"):
-                    past_images = [os.path.join(past_dir, f"{file.split('_')[-2]}_{i:02d}_leftImg8bit.png")
-                                   for i in range(0, 20, 5)]
+                    
+                    splited_file = file.split('_')
+                    past_images = []
+                    for i in range(0, 20, 5):
+
+                        past_images_dir = os.path.join(past_dir, f"{splited_file[0]}_{splited_file[1]}_0")
+                        past_image = os.path.join(past_images_dir, f"{splited_file[0]}_{splited_file[1]}_{i:06d}_leftImg8bit.png")
+                        past_images.append(past_image)
+
+                        
                     self.samples.append((past_images, os.path.join(current_dir, file), cri))
 
     def _prepare_test_samples(self):
