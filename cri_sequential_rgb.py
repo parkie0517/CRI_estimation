@@ -107,6 +107,8 @@ val_loader = DataLoader(val_dataset, batch_size=BATCH_SIZE, shuffle=False)
 model = CRIModel(num_classes=NUM_CLASSES).to(DEVICE)
 criterion = nn.CrossEntropyLoss()
 optimizer = optim.Adam(model.parameters(), lr=1e-4)
+scheduler = torch.optim.lr_scheduler.StepLR(optimizer, step_size=10, gamma=0.1)
+
 
 for epoch in range(EPOCHS):
     model.train()
@@ -136,7 +138,8 @@ for epoch in range(EPOCHS):
             total += labels.size(0)
             correct += predicted.eq(labels).sum().item()
     val_acc = correct / total
-
+    
+    scheduler.step()
     print(f"Epoch {epoch + 1}/{EPOCHS}, Train Loss: {train_loss:.4f}, Train Acc: {train_acc:.4f}, Val Loss: {val_loss:.4f}, Val Acc: {val_acc:.4f}")
 
 # Save predictions
