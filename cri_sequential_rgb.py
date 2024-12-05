@@ -16,7 +16,7 @@ TEST_DIR = "./student_dataset/student_test"
 NUM_CLASSES = 5
 DEVICE = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 BATCH_SIZE = 128
-EPOCHS = 1
+EPOCHS = 10
 
 # Dataset class
 class CRIDataset(Dataset):
