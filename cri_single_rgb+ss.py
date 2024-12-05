@@ -49,7 +49,7 @@ TRAIN_SEG_DIR = "./results_train/segmentation/filtered"
 
 # Hyperparameters
 BATCH_SIZE = 128
-EPOCHS = 5
+EPOCHS = 10
 LEARNING_RATE = 1e-4
 VAL_SPLIT = 0.3
 
@@ -217,3 +217,4 @@ for file in os.listdir(TEST_RGB_DIR):
 # Save Predictions
 sorted_predictions = dict(sorted(predictions.items()))
 np.save(OUTPUT_FILE, sorted_predictions)
+print(f"Saved {OUTPUT_FILE}")
