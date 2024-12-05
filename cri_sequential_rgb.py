@@ -155,4 +155,6 @@ with torch.no_grad():
         _, predicted = outputs.max(1)
         predictions[file_name[0]] = predicted.item()
 
-np.save("predictions.npy", predictions)
+# Save Predictions
+sorted_predictions = dict(sorted(predictions.items()))
+np.save("cri_sequential_rgb_10epoch.npy", sorted_predictions)
