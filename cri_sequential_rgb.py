@@ -37,12 +37,12 @@ class CRIDataset(Dataset):
             for file in os.listdir(current_dir):
                 if file.endswith(".png"):
                     
-                    splited_file = file.split('_')
+                    splitted_file = file.split('_')
                     past_images = []
                     for i in range(0, 20, 5):
 
-                        past_images_dir = os.path.join(past_dir, f"{splited_file[0]}_{splited_file[1]}_0")
-                        past_image = os.path.join(past_images_dir, f"{splited_file[0]}_{splited_file[1]}_{i:06d}_leftImg8bit.png")
+                        past_images_dir = os.path.join(past_dir, f"{splitted_file[0]}_{splitted_file[1]}_0")
+                        past_image = os.path.join(past_images_dir, f"{splitted_file[0]}_{splitted_file[1]}_{i:06d}_leftImg8bit.png")
                         past_images.append(past_image)
 
                         
@@ -52,9 +52,16 @@ class CRIDataset(Dataset):
         current_dir = os.path.join(self.data_dir, "current_image")
         for file in os.listdir(current_dir):
             if file.endswith(".png"):
-                past_images_dir = os.path.join(self.data_dir, f"past_image/{file.split('_')[-2]}_0")
-                past_images = [os.path.join(past_images_dir, f"{file.split('_')[-2]}_{i:02d}_leftImg8bit.png")
-                               for i in range(0, 20, 5)]
+                
+                splitted_file = file.split('_')
+                past_images = []
+                for i in range(0, 20, 5):
+       
+                
+                    past_images_dir = os.path.join(self.data_dir, f"past_image/{splitted_file[0]}_{splitted_file[1]}_0")
+                    past_image = os.path.join(past_images_dir, f"{splitted_file[0]}_{splitted_file[1]}_{i:06d}_leftImg8bit.png")
+                    past_images.append(past_image)
+                      
                 self.samples.append((past_images, os.path.join(current_dir, file)))
 
     def __len__(self):
