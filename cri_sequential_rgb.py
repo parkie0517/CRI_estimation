@@ -144,7 +144,7 @@ scheduler = torch.optim.lr_scheduler.StepLR(optimizer, step_size=10, gamma=0.1)
 for epoch in range(EPOCHS):
     model.train()
     train_loss, correct, total = 0, 0, 0
-    for past_images, current_image, labels in train_loader:
+    for past_images, current_image, labels in tqdm(train_loader, desc="Training Progress"):
         past_images, current_image, labels = past_images.to(DEVICE), current_image.to(DEVICE), labels.to(DEVICE)
         optimizer.zero_grad()
         outputs = model(past_images, current_image)
