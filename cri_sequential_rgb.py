@@ -7,6 +7,8 @@ from torch.utils.data import Dataset, DataLoader, WeightedRandomSampler
 from torchvision import transforms, models
 from sklearn.model_selection import train_test_split
 from PIL import Image
+from tqdm import tqdm
+
 
 # Constants
 DATA_DIR = "./student_dataset/train"
@@ -178,7 +180,7 @@ test_loader = DataLoader(test_dataset, batch_size=1, shuffle=False)
 predictions = {}
 model.eval()
 with torch.no_grad():
-    for past_images, current_image, file_name in test_loader:
+    for past_images, current_image, file_name in tqdm(test_loader, desc="Testing Progress"):
         past_images, current_image = past_images.to(DEVICE), current_image.to(DEVICE)
         outputs = model(past_images, current_image)
         _, predicted = outputs.max(1)
