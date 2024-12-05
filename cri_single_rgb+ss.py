@@ -49,7 +49,7 @@ TRAIN_SEG_DIR = "./results_train/segmentation/filtered"
 
 # Hyperparameters
 BATCH_SIZE = 128
-EPOCHS = 10
+EPOCHS = 15
 LEARNING_RATE = 1e-4
 VAL_SPLIT = 0.3
 
@@ -191,7 +191,7 @@ for epoch in range(EPOCHS):
 # Paths
 TEST_RGB_DIR = "./student_dataset/student_test/current_image"
 TEST_SEG_DIR = "./results/segmentation/filtered"
-OUTPUT_FILE = "cri_single_rgb+ss.npy"
+OUTPUT_FILE = "cri_single_rgb+ss_15epoch.npy"
 
 # Transform
 transform = transforms.Compose([
