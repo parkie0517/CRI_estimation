@@ -61,14 +61,26 @@ class CRIDataset(Dataset):
         return len(self.samples)
 
     def __getitem__(self, idx):
-        past_paths, current_path, label = self.samples[idx]
+        
+        if len(self.samples[idx]) == 2:
+            past_paths, current_path = self.samples[idx]
+            test_time = True
+        else:
+            past_paths, current_path, label = self.samples[idx]
+            test_time = False
+            
+        
         past_images = [Image.open(img).convert("RGB") for img in past_paths]
         current_image = Image.open(current_path).convert("RGB")
         if self.transform:
             past_images = [self.transform(img) for img in past_images]
             current_image = self.transform(current_image)
         past_images = torch.stack(past_images)
-        return past_images, current_image, label
+        
+        if test_time:
+            return past_images, current_image
+        else:
+            return past_images, current_image, label
 
 
 # Define Model
