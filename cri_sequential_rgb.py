@@ -85,7 +85,7 @@ class CRIDataset(Dataset):
         past_images = torch.stack(past_images)
         
         if test_time:
-            return past_images, current_image
+            return past_images, current_image, os.path.basename(current_path)
         else:
             return past_images, current_image, label
 
@@ -182,7 +182,7 @@ with torch.no_grad():
         past_images, current_image = past_images.to(DEVICE), current_image.to(DEVICE)
         outputs = model(past_images, current_image)
         _, predicted = outputs.max(1)
-        predictions[file_name[0]] = predicted.item()
+        predictions[file_name] = predicted.item()
 
 # Save Predictions
 sorted_predictions = dict(sorted(predictions.items()))
