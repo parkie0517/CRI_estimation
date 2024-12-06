@@ -1,5 +1,9 @@
+ckpts/depth.pth
+ckpts/encoder.pth
+ckpts/segmentation.pth
+ckpts/yolo7_cityscapes.pt
 student_dataset/
-ckpts/
 ME455_TP_2024_Student.ipynb
 results/
 results_train/
+val_sanity.npy
