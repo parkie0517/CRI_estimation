@@ -165,9 +165,16 @@ for epoch in range(EPOCHS):
     print(f"Epoch {epoch+1}, Loss: {running_loss/len(train_loader)}")
     
     
-
-
-
+# Save the model checkpoint after each epoch
+checkpoint = {
+    'model_state_dict': model.state_dict(),
+    'optimizer_state_dict': optimizer.state_dict(),
+    'scheduler_state_dict': scheduler.state_dict(),
+    'loss': running_loss / len(train_loader)
+}
+torch.save(checkpoint, f'checkpoint_{EPOCHS}epoch.pth')
+print("Done saving")
+"""
 
 # Transform
 transform = transforms.Compose([
@@ -179,9 +186,9 @@ transform = transforms.Compose([
 
 # Function to generate and save CAM
 def generate_and_save_cam(model, image_tensor, save_path, target_class=None):
-    """
-    Generate and save the Class Activation Map (CAM) for the given image tensor.
-    """
+    
+    #Generate and save the Class Activation Map (CAM) for the given image tensor.
+    
     model.eval()
     
     # Extract the features and classifier weights
@@ -245,3 +252,4 @@ sample_image_tensor = transform(sample_image)
 
 # Generate and save CAM for the sample image
 generate_and_save_cam(model, sample_image_tensor, save_path="cam_output.png")
+"""
