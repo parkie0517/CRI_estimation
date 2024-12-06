@@ -49,7 +49,7 @@ TRAIN_SEG_DIR = "./results_train/segmentation/filtered"
 
 # Hyperparameters
 BATCH_SIZE = 128
-EPOCHS = 15
+EPOCHS = 10
 LEARNING_RATE = 1e-4
 VAL_SPLIT = 0.3
 

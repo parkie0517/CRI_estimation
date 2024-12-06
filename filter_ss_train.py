@@ -40,51 +40,52 @@ allowed_colors = [
     colors['motorcycle'],
     colors['bicycle']
 ]
-
-# load images from the directory
-src_path = '/home/vilab/ssd1tb/hj_ME455/Term_Project/results_train/segmentation/color/cri_4'
-dst_path = '/home/vilab/ssd1tb/hj_ME455/Term_Project/results_train/segmentation/filtered/cri_4'
-
-
-# Create destination path if it doesn't exist
-os.makedirs(dst_path, exist_ok=True)
+for i in range(5):
+    print(f"{i+1}/5")
+    # load images from the directory
+    src_path = f'./results_train/segmentation/color/cri_{i}'
+    dst_path = f'./results_train/segmentation/filtered/cri_{i}'
 
 
-# Get list of image paths
-image_list = [os.path.join(src_path, fname) for fname in os.listdir(src_path) if fname.endswith(('.png'))]
+    # Create destination path if it doesn't exist
+    os.makedirs(dst_path, exist_ok=True)
 
 
-# Loop through the images with a progress bar
-for image_path in tqdm(image_list, desc="Processing images", unit="image"):
-    # Load the image
-    image = cv2.imread(image_path)
-    image = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
+    # Get list of image paths
+    image_list = [os.path.join(src_path, fname) for fname in os.listdir(src_path) if fname.endswith(('.png'))]
 
-    
-    
-    if image is None:
-        print(f"Failed to load image: {image_path}")
-        continue
 
-    # Get image dimensions
-    height, width, _ = image.shape
+    # Loop through the images with a progress bar
+    for image_path in tqdm(image_list, desc="Processing images", unit="image"):
+        # Load the image
+        image = cv2.imread(image_path)
+        image = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
 
-    # Fill a rectangle with [0, 0, 0]
-    cv2.rectangle(image, (448, height - 50), (2048 - 448, height), (0, 0, 0), -1)
+        
+        
+        if image is None:
+            print(f"Failed to load image: {image_path}")
+            continue
 
-    # Filter pixels based on allowed categories
-    filtered_image = np.zeros_like(image)  # Initialize a blank image
-    
-    for color in allowed_colors:
-        # Create a mask for the current color
-        mask = np.all(image == color, axis=-1)
-        filtered_image[mask] = color
+        # Get image dimensions
+        height, width, _ = image.shape
 
-    # Convert the filtered image back to BGR for saving
-    filtered_image_bgr = cv2.cvtColor(filtered_image, cv2.COLOR_RGB2BGR)
+        # Fill a rectangle with [0, 0, 0]
+        cv2.rectangle(image, (448, height - 50), (2048 - 448, height), (0, 0, 0), -1)
 
-    # Save the filtered image to the destination path
-    output_path = os.path.join(dst_path, os.path.basename(image_path))
-    cv2.imwrite(output_path, filtered_image_bgr)
+        # Filter pixels based on allowed categories
+        filtered_image = np.zeros_like(image)  # Initialize a blank image
+        
+        for color in allowed_colors:
+            # Create a mask for the current color
+            mask = np.all(image == color, axis=-1)
+            filtered_image[mask] = color
+
+        # Convert the filtered image back to BGR for saving
+        filtered_image_bgr = cv2.cvtColor(filtered_image, cv2.COLOR_RGB2BGR)
+
+        # Save the filtered image to the destination path
+        output_path = os.path.join(dst_path, os.path.basename(image_path))
+        cv2.imwrite(output_path, filtered_image_bgr)
     
 print("Filtering Complete")
