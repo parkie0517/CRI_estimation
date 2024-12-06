@@ -1,7 +1,7 @@
 import numpy as np
 
 # Load the .npy file
-file_path = './cri_predictions/sequential/cri_sequential_rgb_3epoch.npy'  # Replace with your file path
+file_path = './cri_predictions/sequential/cri_sequential_rgb_5epoch.npy'  # Replace with your file path
 
 data = np.load(file_path, allow_pickle=True)
 data = data.item()
