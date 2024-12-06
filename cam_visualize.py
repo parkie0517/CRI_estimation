@@ -105,7 +105,7 @@ sampler = WeightedRandomSampler(weights=sample_weights, num_samples=len(sample_w
 
 
 train_loader = DataLoader(train_dataset, batch_size=BATCH_SIZE, sampler=sampler)
-val_loader = DataLoader(val_dataset, batch_size=BATCH_SIZE, shuffle=False)
+#val_loader = DataLoader(val_dataset, batch_size=BATCH_SIZE, shuffle=False)
 
 # Model
 class CRIModel(nn.Module):
@@ -164,35 +164,10 @@ for epoch in range(EPOCHS):
     scheduler.step()
     print(f"Epoch {epoch+1}, Loss: {running_loss/len(train_loader)}")
     
-    # Validation
-    model.eval()
-    correct = 0
-    total = 0
-    val_loss = 0.0
-    with torch.no_grad():
-        for batch in val_loader:
-            data, labels = batch
-            rgb = data["rgb"].to(device)
-            seg = data["seg"].to(device)
-            labels = labels.to(device)
-            
-            outputs = model(rgb, seg)
-            loss = criterion(outputs, labels)  # Calculate loss for the current batch
-            val_loss += loss.item()  # Accumulate validation loss
-        
-            _, predicted = torch.max(outputs, 1)
-            total += labels.size(0)
-            correct += (predicted == labels).sum().item()
     
-    val_loss /= len(val_loader)  
-    val_accuracy = 100 * correct / total      
-    print(f"Validation Loss: {val_loss:.4f}, Validation Accuracy: {val_accuracy:.2f}%")
 
 
-# Paths
-TEST_RGB_DIR = "./student_dataset/student_test/current_image"
-TEST_SEG_DIR = "./results/segmentation/filtered"
-OUTPUT_FILE = "cri_single_rgb+ss_15epoch.npy"
+
 
 # Transform
 transform = transforms.Compose([
@@ -200,8 +175,6 @@ transform = transforms.Compose([
     transforms.ToTensor()
 ])
 
-# Load Model
-model.eval()
 
 
 # Function to generate and save CAM
