@@ -6,7 +6,8 @@ from torch import nn, optim
 from torch.utils.data import DataLoader, WeightedRandomSampler, random_split
 from torchvision import transforms, models
 import numpy as np
-
+import matplotlib.pyplot as plt
+import cv2
 
 
 
@@ -202,19 +203,72 @@ transform = transforms.Compose([
 # Load Model
 model.eval()
 
-# Prediction
-predictions = {}
-for file in os.listdir(TEST_RGB_DIR):
-    rgb_image = transform(Image.open(os.path.join(TEST_RGB_DIR, file)).convert("RGB"))
-    seg_image = transform(Image.open(os.path.join(TEST_SEG_DIR, file)).convert("RGB"))
-    rgb_image, seg_image = rgb_image.unsqueeze(0), seg_image.unsqueeze(0)
-    rgb_image = rgb_image.to(device)
-    seg_image = seg_image.to(device)
-    output = model(rgb_image, seg_image)
-    _, predicted = torch.max(output, 1)
-    predictions[file] = predicted.item()
 
-# Save Predictions
-sorted_predictions = dict(sorted(predictions.items()))
-np.save(OUTPUT_FILE, sorted_predictions)
-print(f"Saved {OUTPUT_FILE}")
+# Function to generate and save CAM
+def generate_and_save_cam(model, image_tensor, save_path, target_class=None):
+    """
+    Generate and save the Class Activation Map (CAM) for the given image tensor.
+    """
+    model.eval()
+    
+    # Extract the features and classifier weights
+    features_blobs = []
+    def hook_fn(module, input, output):
+        features_blobs.append(output)
+    
+    # Hook the last convolutional layer of the RGB model
+    final_layer = model.rgb_model.layer4
+    hook = final_layer.register_forward_hook(hook_fn)
+    
+    # Perform a forward pass
+    with torch.no_grad():
+        output = model(image_tensor.unsqueeze(0).to(device), image_tensor.unsqueeze(0).to(device))
+        if target_class is None:
+            target_class = torch.argmax(output, dim=1).item()
+    
+    # Get weights of the classifier
+    params = list(model.fc2.parameters())
+    weight_softmax = params[0].cpu().detach().numpy()
+    
+    # Get the last convolutional features
+    features = features_blobs[0].squeeze(0).cpu().detach().numpy()
+    
+    # Calculate the CAM
+    cam = weight_softmax[target_class].dot(features.reshape(features.shape[0], -1))
+    cam = cam.reshape(features.shape[1:])
+    cam = cv2.resize(cam, (224, 224))
+    cam = (cam - cam.min()) / (cam.max() - cam.min())  # Normalize to [0, 1]
+    
+    # Overlay the CAM on the original image
+    original_image = image_tensor.permute(1, 2, 0).numpy()
+    original_image = (original_image - original_image.min()) / (original_image.max() - original_image.min())
+    heatmap = cv2.applyColorMap(np.uint8(255 * cam), cv2.COLORMAP_JET)
+    heatmap = heatmap / 255.0
+    overlayed_image = heatmap * 0.4 + original_image
+    
+    # Save and display the image
+    plt.figure(figsize=(10, 5))
+    plt.subplot(1, 2, 1)
+    plt.title("Original Image")
+    plt.imshow(original_image)
+    plt.axis("off")
+    
+    plt.subplot(1, 2, 2)
+    plt.title("Class Activation Map")
+    plt.imshow(overlayed_image)
+    plt.axis("off")
+    
+    plt.savefig(save_path)
+    plt.show()
+    
+    # Remove the hook
+    hook.remove()
+
+# After training or during evaluation
+# Example: Generating CAM for a sample test image
+sample_rgb_path = "./student_dataset/student_test/current_image/darmstadt_000022_000020_leftImg8bit.png"  # Update with actual path
+sample_image = Image.open(sample_rgb_path).convert("RGB")
+sample_image_tensor = transform(sample_image)
+
+# Generate and save CAM for the sample image
+generate_and_save_cam(model, sample_image_tensor, save_path="cam_output.png")
