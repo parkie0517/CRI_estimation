@@ -16,7 +16,7 @@ TEST_DIR = "./student_dataset/student_test"
 NUM_CLASSES = 5
 DEVICE = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 BATCH_SIZE = 128
-EPOCHS = 5
+EPOCHS = 3
 
 # Dataset class
 class CRIDataset(Dataset):
@@ -195,4 +195,4 @@ sorted_predictions = dict(sorted(predictions.items()))
 old_key = 'mainz_000002_000020_leftImg8bit.png'
 new_key = 'mainz_000002_000062_leftImg8bit.png'
 sorted_predictions[new_key] = sorted_predictions.pop(old_key)
-np.save("./cri_predictions/sequential/cri_sequential_rgb_5epoch.npy", sorted_predictions)
+np.save("./cri_predictions/sequential/cri_sequential_rgb_3epoch.npy", sorted_predictions)
