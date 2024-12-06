@@ -637,7 +637,7 @@ normTensor = transforms.Normalize(MEAN,STD)
 # DESTINATION
 root_dir = "." 
 
-result_dir = os.path.join(root_dir,"results")
+result_dir = os.path.join(root_dir,"results_train")
 os.makedirs(result_dir,exist_ok=True)
 
 seg_dir = os.path.join(result_dir,"segmentation")
@@ -645,54 +645,36 @@ os.makedirs(seg_dir,exist_ok=True)
 
 
 # For train current segmentation results
-#seg_color_dir = os.path.join(root_dir,"results_train/segmentation/color/cri_0")
-#seg_color_dir = os.path.join(root_dir,"results_train/segmentation/color/cri_1")
-#seg_color_dir = os.path.join(root_dir,"results_train/segmentation/color/cri_2")
-#seg_color_dir = os.path.join(root_dir,"results_train/segmentation/color/cri_3")
-#seg_color_dir = os.path.join(root_dir,"results_train/segmentation/color/cri_4")
 
-# For test segmentation results
-seg_color_dir = os.path.join(seg_dir,"color")
-os.makedirs(seg_color_dir,exist_ok=True)
+for i in range(5):
+    # Save path
+    seg_color_dir = os.path.join(root_dir,f"results_train/segmentation/color/cri_{i}")
+    os.makedirs(seg_color_dir,exist_ok=True)
 
+    # Source path
+    images = glob.glob(os.path.join(root_dir,f'student_dataset/train/current_image/cri_{i}/*.png')) # 0
 
-seg_pred_dir = os.path.join(seg_dir,"pred")
-os.makedirs(seg_pred_dir,exist_ok=True)
+    print(f"{i+1}/5")
+    for image in tqdm(images):
+        
+        name = os.path.basename(image)
+        image = cv2.cvtColor(cv2.imread(image), cv2.COLOR_RGB2BGR)
 
+        # Transform and normalize the input image
+        imageT = normTensor(toTensor(image)).unsqueeze(0).cuda()  # Add batch dimension and move to GPU
 
-# SOURCE
-images = glob.glob(os.path.join(root_dir,'student_dataset/student_test/current_image/*.png')) # test
-#images = glob.glob(os.path.join(root_dir,'student_dataset/train/current_image/cri_0/*.png')) # 0
-#images = glob.glob(os.path.join(root_dir,'student_dataset/train/current_image/cri_1/*.png')) # 1
-#images = glob.glob(os.path.join(root_dir,'student_dataset/train/current_image/cri_2/*.png')) # 2
-#images = glob.glob(os.path.join(root_dir,'student_dataset/train/current_image/cri_3/*.png')) # 3
-#images = glob.glob(os.path.join(root_dir,'student_dataset/train/current_image/cri_4/*.png')) # 4
+        with torch.no_grad():
+            # Perform inference
+            pred = model_ss(imageT)  # Model output shape: (batch_size, num_classes, H, W)
+            pred = torch.argmax(pred, dim=1).squeeze(0).cpu().numpy()  # Take the class with the highest probability
+        
+        
+        
+        # Generate a colormap using decode_segmap
+        colormap = decode_segmap(pred.astype(np.uint8))  # Convert to uint8 for compatibility
 
+        # Save the colormap result
+        color_path = os.path.join(seg_color_dir, name)
+        cv2.imwrite(color_path, cv2.cvtColor(colormap.astype(np.uint8), cv2.COLOR_RGB2BGR))
 
-  
-
-
-for image in tqdm(images):
-    name = os.path.basename(image)
-    image = cv2.cvtColor(cv2.imread(image), cv2.COLOR_RGB2BGR)
-
-    # Transform and normalize the input image
-    imageT = normTensor(toTensor(image)).unsqueeze(0).cuda()  # Add batch dimension and move to GPU
-
-    with torch.no_grad():
-        # Perform inference
-        pred = model_ss(imageT)  # Model output shape: (batch_size, num_classes, H, W)
-        pred = torch.argmax(pred, dim=1).squeeze(0).cpu().numpy()  # Take the class with the highest probability
-    
-    
-    # Save the raw segmentation prediction
-    pred_path = os.path.join(seg_pred_dir, name)
-    cv2.imwrite(pred_path, pred)
-    
-    
-    # Generate a colormap using decode_segmap
-    colormap = decode_segmap(pred.astype(np.uint8))  # Convert to uint8 for compatibility
-
-    # Save the colormap result
-    color_path = os.path.join(seg_color_dir, name)
-    cv2.imwrite(color_path, cv2.cvtColor(colormap.astype(np.uint8), cv2.COLOR_RGB2BGR))
+print("Done")
