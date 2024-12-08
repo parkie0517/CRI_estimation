@@ -168,9 +168,12 @@ transform = transforms.Compose([
 
 # After training or during evaluation
 # Example: Generating CAM for a sample test image
-sample_rgb_path = "./student_dataset/student_test/current_image/darmstadt_000022_000020_leftImg8bit.png"  # Update with actual path
+
+image_name = "./cam_results/bremen_000193_000020_leftImg8bit.png"
+
+sample_rgb_path = "./student_dataset/student_test/current_image/"+ image_name  # Update with actual path
 sample_image = Image.open(sample_rgb_path).convert("RGB")
 sample_image_tensor = transform(sample_image)
 
 # Generate and save CAM for the sample image
-generate_and_save_cam(model, sample_image_tensor, save_path="cam_output.png")
+generate_and_save_cam(model, sample_image_tensor, save_path=f"cam_output_{image_name}")
