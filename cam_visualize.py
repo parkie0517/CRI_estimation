@@ -139,6 +139,8 @@ class CRIModel(nn.Module):
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 model = CRIModel().to(device)
 
+
+"""
 criterion = nn.CrossEntropyLoss()
 optimizer = optim.Adam(model.parameters(), lr=LEARNING_RATE)
 scheduler = torch.optim.lr_scheduler.StepLR(optimizer, step_size=7, gamma=0.1)
@@ -174,7 +176,17 @@ checkpoint = {
 }
 torch.save(checkpoint, f'checkpoint_{EPOCHS}epoch.pth')
 print("Done saving")
+
 """
+
+# Load saved Model
+
+# Load the model checkpoint
+checkpoint = torch.load('checkpoint_epoch_1.pth')  # Replace with your checkpoint file
+model.load_state_dict(checkpoint['model_state_dict'])
+
+# Set the model to evaluation mode if you are using it for inference
+model.eval()  # Or model.train() if you want to resume training
 
 # Transform
 transform = transforms.Compose([
@@ -252,4 +264,3 @@ sample_image_tensor = transform(sample_image)
 
 # Generate and save CAM for the sample image
 generate_and_save_cam(model, sample_image_tensor, save_path="cam_output.png")
-"""
