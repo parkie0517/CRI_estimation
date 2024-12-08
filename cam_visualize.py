@@ -59,7 +59,7 @@ transform = transforms.Compose([
     transforms.Resize((224, 224)),
     transforms.ToTensor()
 ])
-
+"""
 # Load Data
 datasets = []
 labels = []
@@ -73,12 +73,16 @@ for label in range(5):
 # Combine datasets
 combined_datasets = torch.utils.data.ConcatDataset(datasets)
 
-"""
+
 # Weighted Random Sampler
 weights = [1.0 / CLASS_WEIGHTS[label] for label in labels]
 sampler = WeightedRandomSampler(weights, len(weights), replacement=True)
+
+
 """
 
+
+"""
 # Split dataset
 val_size = int(VAL_SPLIT * len(combined_datasets))
 train_size = len(combined_datasets) - val_size
@@ -106,6 +110,8 @@ sampler = WeightedRandomSampler(weights=sample_weights, num_samples=len(sample_w
 
 train_loader = DataLoader(train_dataset, batch_size=BATCH_SIZE, sampler=sampler)
 #val_loader = DataLoader(val_dataset, batch_size=BATCH_SIZE, shuffle=False)
+"""
+
 
 # Model
 class CRIModel(nn.Module):
@@ -141,6 +147,7 @@ model = CRIModel().to(device)
 
 
 """
+
 criterion = nn.CrossEntropyLoss()
 optimizer = optim.Adam(model.parameters(), lr=LEARNING_RATE)
 scheduler = torch.optim.lr_scheduler.StepLR(optimizer, step_size=7, gamma=0.1)
@@ -176,18 +183,17 @@ checkpoint = {
 }
 torch.save(checkpoint, f'checkpoint_{EPOCHS}epoch.pth')
 print("Done saving")
-
 """
 
-# Load saved Model
 
 # Load the model checkpoint
-checkpoint = torch.load('checkpoint_epoch_1.pth')  # Replace with your checkpoint file
+checkpoint = torch.load('checkpoint_epoch_10.pth')  # Replace with your checkpoint file
 model.load_state_dict(checkpoint['model_state_dict'])
+model = model.to(device)
 
 # Set the model to evaluation mode if you are using it for inference
 model.eval()  # Or model.train() if you want to resume training
-
+breakpoint()
 # Transform
 transform = transforms.Compose([
     transforms.Resize((224, 224)),
